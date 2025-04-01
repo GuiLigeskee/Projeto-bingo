@@ -48,11 +48,11 @@ COLORS = {
 }
 
 # Fonte temática
-FONT_TITLE = ("Times New Roman", 55, "bold")
-FONT_NUMBER = ("Times New Roman", 150, "bold")
-FONT_BUTTON = ("Times New Roman", 28, "bold")
-FONT_TEXT = ("Times New Roman", 24)
-FONT_SMALL = ("Times New Roman", 20)
+FONT_TITLE = ("Poppins", 45, "bold")
+FONT_NUMBER = ("Poppins", 250, "bold")
+FONT_BUTTON = ("Poppins", 28, "bold")
+FONT_TEXT = ("Poppins", 24)
+FONT_SMALL = ("Poppins", 20)
 
 # Função para sortear um número
 def sortear_numero():
@@ -92,7 +92,7 @@ def bingo():
         return
     
     bingo_ativado = True
-    numero_label.config(text="BINGO!", font=FONT_NUMBER, fg=COLORS['accent'])
+    numero_label.config(text="BINGO!", font=FONT_NUMBER, fg=COLORS['primary'])
     sortear_button.config(state="disabled")
     bingo_button.config(state="disabled")
     
@@ -252,6 +252,14 @@ style.configure("TNotebook.Tab", font=FONT_TEXT, background=COLORS['background']
 frame_bingo = tk.Frame(notebook, bg=COLORS['background'])
 notebook.add(frame_bingo, text="Sorteio")
 
+# Frame container para centralizar todo o conteúdo verticalmente
+center_container = tk.Frame(frame_bingo, bg=COLORS['background'])
+center_container.pack(expand=True, fill='both')
+
+# Frame para centralizar horizontalmente
+center_frame = tk.Frame(center_container, bg=COLORS['background'])
+center_frame.pack(expand=True)
+
 # Criar aba das rodadas anteriores
 frame_rodadas = tk.Frame(notebook, bg=COLORS['background'])
 notebook.add(frame_rodadas, text="Histórico")
@@ -263,16 +271,16 @@ config_menu.add_command(label="Configurações", command=abrir_configuracoes, fo
 menubar.add_cascade(label="Opções", menu=config_menu)
 root.config(menu=menubar)
 
-# Número sorteado em destaque
-numero_frame = tk.Frame(frame_bingo, bg=COLORS['background'])
+# Número sorteado em destaque (agora dentro do center_frame)
+numero_frame = tk.Frame(center_frame, bg=COLORS['background'])
 numero_frame.pack(pady=40)
 
 numero_label = tk.Label(numero_frame, text="Clique para Sortear", font=FONT_TITLE, 
                        bg=COLORS['background'], fg=COLORS['secondary'])
 numero_label.pack()
 
-# Botões
-button_frame = tk.Frame(frame_bingo, bg=COLORS['background'])
+# Botões (agora dentro do center_frame)
+button_frame = tk.Frame(center_frame, bg=COLORS['background'])
 button_frame.pack(pady=20)
 
 sortear_button = tk.Button(button_frame, text="Sortear Número", font=FONT_BUTTON, command=sortear_numero, 
@@ -283,11 +291,11 @@ bingo_button = tk.Button(button_frame, text="BINGO!", font=FONT_BUTTON, command=
                        bg=COLORS['accent'], fg=COLORS['text'], width=10, height=1)
 bingo_button.grid(row=0, column=1, padx=20)
 
-nova_rodada_button = tk.Button(frame_bingo, text="Nova Rodada", font=FONT_BUTTON, command=nova_rodada, 
+nova_rodada_button = tk.Button(center_frame, text="Nova Rodada", font=FONT_BUTTON, command=nova_rodada, 
                              bg=COLORS['primary'], fg=COLORS['highlight'], width=15, height=1)
 
-# Números sorteados
-rodadas_frame = tk.Frame(frame_bingo, bg=COLORS['background'])
+# Números sorteados (agora dentro do center_frame)
+rodadas_frame = tk.Frame(center_frame, bg=COLORS['background'])
 rodadas_frame.pack(pady=30)
 
 rodadas_label = tk.Label(rodadas_frame, text="Números Sorteados:", font=FONT_TEXT, 

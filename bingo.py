@@ -64,22 +64,23 @@ class Tamanhos:
         self.FONTE_NUMEROS = ("Arial", tamanho_fonte_numeros, "bold")
         self.FONTE_TEXTO = ("Arial", 18)
         self.FONTE_BOTAO = ("Arial", 20, "bold")
-        self.FONTE_BINGO = ("Arial", 140, "bold")
+        self.FONTE_BINGO = ("Arial", min(140, int(self.root.winfo_screenheight() * 0.2)), "bold")
         self.LARGURA_COLUNA = max(140, int(self.root.winfo_screenwidth() * 0.15))
 
 # Cores
 CORES = {
-    'fundo': '#FFFFFF',
+    'fundo': '#fdf5e6',
     'cabecalho': '#8B0000',
-    'texto': '#000000',
+    'texto': '#FF0000',
     'destaque': '#C9A227',
     'botao': '#1E3F66',
-    'cartela': '#FFFFFF',
-    'borda': '#000000',
+    'cartela': '#fdf5e6',
+    'borda': '#fdf5e6',
     'header_bg': '#8B0000',
-    'header_fg': '#FFFFFF',
-    'cell_bg': '#F8F8F8',
-    'numero_sorteado': '#FF0000'
+    'header_fg': '#ffffff',
+    'cell_bg': '#fdf5e6',
+    'numero_sorteado': '#FF0000',
+    'separador': '#000000'  # Cor para as linhas separadoras
 }
 
 # Inicializar tamanhos
@@ -128,76 +129,69 @@ def atualizar_cartela():
     for widget in tabela_frame.winfo_children():
         widget.destroy()
     
-    # Configurar colunas (10 colunas - 2 para cada letra BINGO)
-    for i in range(10):
-        tabela_frame.grid_columnconfigure(i, weight=1, minsize=tamanhos.LARGURA_COLUNA//2)
+    # Configurar colunas (5 colunas - uma para cada letra BINGO)
+    for i in range(5):
+        tabela_frame.grid_columnconfigure(i, weight=1, minsize=tamanhos.LARGURA_COLUNA)
     
-    # Cabeçalho B B I I N N G G O O
-    for col in range(5):
+    # Cabeçalho B I N G O
+    for col, letra in enumerate(colunas_bingo.keys()):
         header = tk.Frame(tabela_frame,
-                         bg=CORES['header_bg'],
-                         height=tamanhos.ALTURA_CELULA//3,
-                         highlightthickness=1,
-                         highlightbackground=CORES['borda'])
-        header.grid(row=0, column=col*2, columnspan=2, sticky="nsew")
+                        bg=CORES['header_bg'],
+                        height=tamanhos.ALTURA_CELULA//3,
+                        highlightthickness=0)
+        header.grid(row=0, column=col, sticky="nsew", padx=(0, 1) if col < 4 else (0, 0))
+        
+        # Adicionar borda direita se não for a última coluna
+        if col < 4:
+            borda_dir = tk.Frame(header, width=1, bg=CORES['separador'], height=tamanhos.ALTURA_CELULA//3)
+            borda_dir.pack(side=tk.RIGHT, fill=tk.Y)
         
         tk.Label(header,
-                text=list(colunas_bingo.keys())[col],
+                text=letra,
                 font=tamanhos.FONTE_CABECALHO,
                 fg=CORES['header_fg'],
-                bg=CORES['header_bg']).pack(expand=True)
+                bg=CORES['header_bg']).pack(expand=True, fill=tk.BOTH)
     
-    # Números sorteados - 8 linhas (16 números em pares horizontais)
-    for linha in range(1, 9):  # Alterado para 8 linhas
-        for col in range(5):  # 5 letras BINGO
+    # Números sorteados - 8 linhas
+    for linha in range(1, 9):
+        for col, letra in enumerate(colunas_bingo.keys()):
             bg_color = CORES['cartela'] if linha % 2 == 0 else CORES['cell_bg']
             
-            # Célula que vai conter o par de números
             cell = tk.Frame(tabela_frame,
                           bg=bg_color,
-                          highlightthickness=1,
-                          highlightbackground=CORES['borda'],
+                          highlightthickness=0,
                           height=tamanhos.ALTURA_CELULA)
-            cell.grid(row=linha, column=col*2, columnspan=2, sticky="nsew")
+            cell.grid(row=linha, column=col, sticky="nsew", padx=(0, 1) if col < 4 else (0, 0))
             
-            letra = list(colunas_bingo.keys())[col]
-            numeros_coluna = colunas_bingo[letra]
+            # Adicionar borda direita se não for a última coluna
+            if col < 4:
+                borda_dir = tk.Frame(cell, width=2, bg=CORES['separador'], height=tamanhos.ALTURA_CELULA)
+                borda_dir.pack(side=tk.RIGHT, fill=tk.Y)
             
-            # Frame interno para os 2 números
+            # Mostrar números (até 2 por célula)
             num_frame = tk.Frame(cell, bg=bg_color)
             num_frame.pack(expand=True, fill=tk.BOTH)
             
-            # Primeiro número (esquerda) - (linha*2-2)
-            if (linha*2-2) < len(numeros_coluna):
-                num1 = numeros_coluna[linha*2-2]
-                tk.Label(num_frame,
-                        text=str(num1),
-                        font=tamanhos.FONTE_NUMEROS,
-                        fg=CORES['texto'],
-                        bg=bg_color,
-                        width=4).pack(side=tk.LEFT, expand=True)
-            else:
-                # Célula vazia para manter alinhamento
-                tk.Label(num_frame,
-                        text="",
-                        bg=bg_color,
-                        width=4).pack(side=tk.LEFT, expand=True)
+            idx1 = linha*2-2
+            idx2 = linha*2-1
             
-            # Segundo número (direita) - (linha*2-1)
-            if (linha*2-1) < len(numeros_coluna):
-                num2 = numeros_coluna[linha*2-1]
+            if idx1 < len(colunas_bingo[letra]):
                 tk.Label(num_frame,
-                        text=str(num2),
-                        font=tamanhos.FONTE_NUMEROS,
-                        fg=CORES['texto'],
-                        bg=bg_color,
-                        width=4).pack(side=tk.LEFT, expand=True)
+                       text=str(colunas_bingo[letra][idx1]),
+                       font=tamanhos.FONTE_NUMEROS,
+                       fg=CORES['texto'],
+                       bg=bg_color).pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
             else:
-                # Célula vazia para manter alinhamento
+                tk.Label(num_frame, text="", bg=bg_color).pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+            
+            if idx2 < len(colunas_bingo[letra]):
                 tk.Label(num_frame,
-                        text="",
-                        bg=bg_color,
-                        width=4).pack(side=tk.LEFT, expand=True)
+                       text=str(colunas_bingo[letra][idx2]),
+                       font=tamanhos.FONTE_NUMEROS,
+                       fg=CORES['texto'],
+                       bg=bg_color).pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
+            else:
+                tk.Label(num_frame, text="", bg=bg_color).pack(side=tk.LEFT, expand=True, fill=tk.BOTH)
 
 def nova_rodada():
     global bingo_ativado
@@ -231,7 +225,9 @@ def finalizar_rodada():
 def mostrar_bingo_no_painel():
     global botoes_bingo_frame
     
-    numero_label.config(text="BINGO!", font=tamanhos.FONTE_BINGO, fg=CORES['cabecalho'])
+    # Calcula tamanho da fonte baseado na altura da tela
+    fonte_size = min(140, int(root.winfo_screenheight() * 0.2))
+    numero_label.config(text="BINGO", font=("Arial", fonte_size, "bold"), fg=CORES['cabecalho'])
     
     if botoes_bingo_frame is not None:
         botoes_bingo_frame.destroy()
@@ -443,7 +439,7 @@ numero_frame = tk.Frame(controle_frame, bg=CORES['fundo'])
 numero_frame.pack(fill=tk.X, pady=(0, 10))
 
 tk.Label(numero_frame, 
-        text="ÚLTIMO NÚMERO SORTEADO", 
+        text="NÚMERO", 
         font=tamanhos.FONTE_CABECALHO, 
         bg=CORES['fundo']).pack()
 
@@ -484,7 +480,7 @@ botoes_frame = tk.Frame(controle_frame, bg=CORES['fundo'])
 botoes_frame.pack(fill=tk.X, pady=10)
 
 bingo_btn = tk.Button(botoes_frame, 
-                     text="BINGO!", 
+                     text="BINGO", 
                      font=tamanhos.FONTE_BOTAO, 
                      command=finalizar_rodada,
                      bg=CORES['destaque'], 
@@ -508,5 +504,6 @@ tabela_frame = tk.Frame(right_panel, bg=CORES['cartela'])
 tabela_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
 # Iniciar o jogo
+botoes_bingo_frame = None
 nova_rodada()
 root.mainloop()

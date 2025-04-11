@@ -4,6 +4,10 @@ import sqlite3
 from datetime import datetime
 import csv
 
+
+botoes_bingo_frame = None
+elementos_ocultos = []
+
 # Configuração do banco de dados
 def setup_database():
     conn = sqlite3.connect("bingo.db")
@@ -55,8 +59,8 @@ class Tamanhos:
         self.ALTURA_CELULA = max(50, altura_disponivel // 9)  # Ajuste para 8 linhas
         
         # Define fontes
-        tamanho_fonte_numeros = max(22, self.ALTURA_CELULA // 2)
-        tamanho_fonte_cabecalho = int(tamanho_fonte_numeros * 1.2)
+        tamanho_fonte_numeros = max(30, self.ALTURA_CELULA // 2)
+        tamanho_fonte_cabecalho = int(tamanho_fonte_numeros * 1.5)
         
         self.FONTE_TITULO = ("Arial", 36, "bold")
         self.FONTE_NUMERO_SORTEADO = ("Arial", 120, "bold")
@@ -64,7 +68,7 @@ class Tamanhos:
         self.FONTE_NUMEROS = ("Arial", tamanho_fonte_numeros, "bold")
         self.FONTE_TEXTO = ("Arial", 18)
         self.FONTE_BOTAO = ("Arial", 20, "bold")
-        self.FONTE_BINGO = ("Arial", min(140, int(self.root.winfo_screenheight() * 0.2)), "bold")
+        self.FONTE_BINGO = ("Arial", min(70, int(self.root.winfo_screenheight() * 0.2)), "bold")
         self.LARGURA_COLUNA = max(140, int(self.root.winfo_screenwidth() * 0.15))
 
 # Cores
@@ -225,39 +229,61 @@ def finalizar_rodada():
 def mostrar_bingo_no_painel():
     global botoes_bingo_frame
     
-    # Calcula tamanho da fonte baseado na altura da tela
-    fonte_size = min(140, int(root.winfo_screenheight() * 0.2))
-    numero_label.config(text="BINGO", font=("Arial", fonte_size, "bold"), fg=CORES['cabecalho'])
+    # Ocultar elementos que não devem aparecer durante o BINGO
+    numero_frame.pack_forget()
+    entrada_frame.pack_forget()
+    botoes_frame.pack_forget()
     
+    # Criar um novo frame para organizar BINGO + botões
     if botoes_bingo_frame is not None:
         botoes_bingo_frame.destroy()
     
     botoes_bingo_frame = tk.Frame(controle_frame, bg=CORES['fundo'])
-    botoes_bingo_frame.pack(pady=20)
+    botoes_bingo_frame.pack(fill=tk.BOTH, expand=True, pady=20)
     
-    tk.Button(botoes_bingo_frame, 
-             text="Continuar Rodada", 
-             font=tamanhos.FONTE_BOTAO, 
+    # Adicionar a palavra BINGO grande
+    tk.Label(botoes_bingo_frame,
+            text="BINGO",
+            font=tamanhos.FONTE_BINGO,
+            fg=CORES['cabecalho'],
+            bg=CORES['fundo']).pack(pady=(0, 20))
+    
+    # Frame para os botões
+    botoes_frame_bingo = tk.Frame(botoes_bingo_frame, bg=CORES['fundo'])
+    botoes_frame_bingo.pack()
+    
+    # Botão Continuar Rodada
+    tk.Button(botoes_frame_bingo,
+             text="Continuar Rodada",
+             font=tamanhos.FONTE_BOTAO,
              command=continuar_rodada,
-             bg=CORES['botao'], 
+             bg=CORES['botao'],
              fg='white',
-             width=20).pack(side=tk.LEFT, padx=10)
+             width=20).pack(fill=tk.X, pady=5, padx=10, ipady=5)
     
-    tk.Button(botoes_bingo_frame, 
-             text="Terminar Rodada", 
-             font=tamanhos.FONTE_BOTAO, 
+    # Botão Terminar Rodada
+    tk.Button(botoes_frame_bingo,
+             text="Terminar Rodada",
+             font=tamanhos.FONTE_BOTAO,
              command=terminar_rodada,
-             bg='#8B0000', 
+             bg='#8B0000',
              fg='white',
-             width=20).pack(side=tk.LEFT, padx=10)
+             width=20).pack(fill=tk.X, pady=5, padx=10, ipady=5)
 
 def continuar_rodada():
     global botoes_bingo_frame
     
+    # Remover o frame do BINGO
     if botoes_bingo_frame is not None:
         botoes_bingo_frame.destroy()
         botoes_bingo_frame = None
     
+    # Restaurar elementos originais
+    numero_frame.pack(fill=tk.X, pady=(0, 10))
+    entrada_frame.pack(fill=tk.X, pady=10)
+    botoes_frame.pack(fill=tk.X, pady=10)
+    
+    # Mostrar último número ou "--" se não houver números
     if any(colunas_bingo.values()):
         ultimo_numero = max(num for sublist in colunas_bingo.values() for num in sublist)
         numero_label.config(text=str(ultimo_numero), font=tamanhos.FONTE_NUMERO_SORTEADO, fg=CORES['numero_sorteado'])
@@ -267,11 +293,28 @@ def continuar_rodada():
 def terminar_rodada():
     global botoes_bingo_frame
     
+    # Destruir o frame dos botões do BINGO
     if botoes_bingo_frame is not None:
         botoes_bingo_frame.destroy()
         botoes_bingo_frame = None
     
-    nova_rodada()
+    # Restaurar todos os elementos do painel de controle
+    numero_frame.pack(fill=tk.X, pady=(0, 10))
+    entrada_frame.pack(fill=tk.X, pady=10)
+    botoes_frame.pack(fill=tk.X, pady=10)
+    
+    # Limpar todos os números e reiniciar a rodada
+    for letra in colunas_bingo:
+        colunas_bingo[letra].clear()
+    
+    # Atualizar a cartela para estado vazio
+    atualizar_cartela()
+    
+    # Resetar o display
+    numero_label.config(text="--", font=tamanhos.FONTE_NUMERO_SORTEADO, fg=CORES['texto'])
+    
+    # Resetar o campo de entrada
+    numero_entry.delete(0, tk.END)
 
 # Funções de histórico
 def mostrar_historico():
